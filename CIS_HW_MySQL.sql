@@ -4,11 +4,22 @@ SHOW TABLES;
 DESC actor;
 SHOW CREATE TABLE actor;
 
-SELECT first_name, last_name
-FROM actor;
+-- * 1a. Display the first and last names of all actors from the table `actor`. DONE
+SELECT 
+	first_name, 
+    last_name
+FROM 
+	actor;
 
-SELECT UPPER(first_name), UPPER(last_name), concat(first_name, ' ', last_name) AS actor_name
-FROM actor;
+-- * 1b. Display the first and last name of each actor in a single column in upper case letters. Name the column `Actor Name`.
+SELECT 
+	UPPER(first_name), 
+    UPPER(last_name), 
+    concat(first_name, ' ', last_name) AS actor_name
+FROM 
+	actor
+ORDER BY 
+	actor_name ASC LIMIT 10;
 
 -- * 2a. You need to find the ID number, first name, and last name of an actor, of whom you know only the first name, "Joe." What is one query would you use to obtain this information?
 
@@ -24,7 +35,8 @@ FROM actor WHERE last_name LIKE '%GEN%';
 
 -- * 2c. Find all actors whose last names contain the letters `LI`. This time, order the rows by last name and first name, in that order:
 SELECT *
-FROM actor WHERE last_name LIKE '%LI%'
+FROM actor 
+WHERE last_name LIKE '%LI%'
 ORDER BY last_name ASC;
 -- Count = 10
 
@@ -110,27 +122,14 @@ DESC staff;
 
 -- * 6c. List each film and the number of actors who are listed for that film. Use tables `film_actor` and `film`. Use inner join.
 
-DESC film;
-
 SELECT 
-	DISTINCT film_id, COUNT(DISTINCT actor_id) AS total
+	title, COUNT(DISTINCT actor_id) AS total
 FROM 
 	film_actor
-GROUP BY film_id AND total;
-
-
-SELECT title, COUNT(actor_id) AS total
-FROM
-	film_actor AS fa
-INNER JOIN
-	film as f
-ON 
-	fa.film_id = f.film_id
-    GROUP BY title;
+INNER JOIN film USING (film_id)
+GROUP BY title;
 
 -- * 6d. How many copies of the film `Hunchback Impossible` exist in the inventory system?
-
-DESC film;
 
 SELECT COUNT(title)
 FROM film
@@ -138,8 +137,6 @@ WHERE title = 'Hunchback Impossible';
 --  Only 1 version exists in the inventory
 
 -- * 6e. Using the tables `payment` and `customer` and the `JOIN` command, list the total paid by each customer. List the customers alphabetically by last name:
-
-DESC payment;
 
 SELECT 
 	last_name, first_name, customer_id, SUM(amount) AS total
@@ -152,6 +149,16 @@ ORDER BY last_name ASC;
 
 -- * 7a. The music of Queen and Kris Kristofferson have seen an unlikely resurgence. As an unintended consequence, films starting with the letters `K` and `Q` have also soared in popularity. Use subqueries to display the titles of movies starting with the letters `K` and `Q` whose language is English.
 
+-- Solution using a subquery
+SELECT title
+FROM film
+WHERE title LIKE 'K%' OR title LIKE 'Q%' AND language_id IN (
+	SELECT language_id
+	FROM language
+	WHERE name = 'ENGLISH'
+	);
+
+-- Solution with inner join
 SELECT title, name
 FROM film
 INNER JOIN language USING (language_id)
@@ -159,6 +166,22 @@ WHERE title LIKE 'K%' OR title LIKE 'Q%' ;
 
 -- * 7b. Use subqueries to display all actors who appear in the film `Alone Trip`.
 
+-- Solution using subqueries
+SELECT last_name, first_name
+FROM actor
+WHERE actor_id IN 
+(
+	SELECT actor_id
+    FROM film_actor
+    WHERE film_id IN
+    (
+    SELECT film_id
+    FROM film
+    WHERE title = 'Alone Trip'
+    )
+);
+
+-- Solution using inner joins
 SELECT title, last_name, first_name
 FROM film
 INNER JOIN film_actor USING (film_id)
